@@ -1,15 +1,17 @@
 package balloons
 
+import balloons.fp.Task
+import balloons.game._
+
 import scala.io.StdIn
 
+/**
+ * Out main entry point to our console [[BalloonGame]]
+ */
 object Main extends App {
+  type Prompt = String
 
-  def userInputs() = LazyList.continually(UserInput.stdIn())
+  def userInput(prompt: Prompt): Task[String] = Task.eval(StdIn.readLine(prompt))
 
-  val sizes = StdIn.readLine().split(",", -1).map(_.toInt)
-
-  GameState.run(sizes.toList, userInputs()) match {
-    case None => println("Ran out of input")
-    case Some(score) => println(s"SCORE: $score")
-  }
+  println(BalloonGame.forInput(RandomGameSettings.fromEnv(), userInput))
 }
