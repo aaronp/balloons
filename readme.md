@@ -1,6 +1,4 @@
-Console Balloon Game
-
-# About
+#Console Balloon Game
 
 A game of risk - inflate balloons to increase your score, but be sure to 'bank' before they pop!
 
@@ -38,7 +36,7 @@ There's a 'run.sh' which *should* work out-of-the-box if you have *sbt* installe
 run.sh will build the project if required, otherwise it'll launch the game, which assumes the first input
 is the game config, which can be:
 
-### Fixed (e.g. 4 1 §)
+### Fixed (e.g. 4 2 1)
 Specify a space-separated list of balloon sizes:
 ```
 4 2 1
@@ -109,7 +107,7 @@ e.g. something akin to this:
 That was super-simple, and (I thought) pretty easily testable. The tests were a little clunkier than I wanted though, as they had to set up a collection of fixed 'UserInput's for a game.
 
 ## Phase Two - fixed random games and generated tests
-The game worked after phase one, and to my deligh my 9yr old daughter really enjoyed playing/testing it!  At this point I was at around the 2 hour mark, but given my daughter's (and my) interest, I wanted to keep going.
+The game worked after phase one, and to my delight my 9yr old daughter really enjoyed playing/testing it!  At this point I was at around the 2 hour mark, but given my daughter's (and my) interest, I wanted to keep going.
 
 I wanted to play it with my daughter, and also wanted a way where we could both play the game w/o one of us knowing the balloon sizes, and yet still both be able to play the same random game. It would also be nice not to have to clear down the first line of input.
 
@@ -134,7 +132,7 @@ This way the user-feedback could offer a bit more back to the player (current ba
 I also had in mind the concept of integration tests. Most of my phase 1 tests would die w/ these changes, and I wanted to be able to play a game, visually verify the outputs were as expected for my inputs, and then just save/replay those test scenarios. In principal this should be pretty simple given the new approach, as I could just buffer the prompts and user responses.
 
 At this point I'd probably bring in cats-effect or zio, but I really just needed an IO and State monad.
-I also though briefly on Dan Spiewak's Free as in Monads talk where Daniel quickly created the Free monad in 15 minutes. And so that's what I did -- I pinched the 'Seed' from [my genetic algo demo](https://github.com/aaronp/countdown/src/main/scala) to use for fixed, purely functional random numbers and just wrote a basic balloons.fp.Task[A] to use for my IO monad.
+I also though briefly on Dan Spiewak's Free as in Monads talk where Daniel quickly created the Free monad in 15 minutes. And so that's what I did -- I pinched the '[Seed](https://github.com/aaronp/countdown/blob/master/ga/shared/src/main/scala/ga/Seed.scala)' from [my genetic algo demo](https://porpoiseltd.com/countdown) to use for fixed, purely functional random numbers and just wrote a basic balloons.fp.Task[A] to use for my IO monad.
 
 
 With this in place, the code (perhaps apart from having to add the 'fp' package) got a lot simpler, and I'm pleased with how the 'TestGenerator' turned out. Basically you can run the equivalent of the Main entry point, but the output at the end is some test code which you can copy/paste into MainTest.scala to re-run test sessions.
