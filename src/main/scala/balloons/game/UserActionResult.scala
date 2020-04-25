@@ -21,3 +21,7 @@ case class Ok(balloon: BalloonState) extends UserActionResult {
 case class Burst(balloonIndex: Int, currentBalloonSize: Int) extends UserActionResult
 
 case class Banked(balloonIndex: Int, currentBalloonSize: Int) extends UserActionResult
+
+case class PowerModeEntered(balloonIndex: Int)  extends UserActionResult
+
+case class InvalidUserInput(balloonIndex: Int, message : String)  extends UserActionResult

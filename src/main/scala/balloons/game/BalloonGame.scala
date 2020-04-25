@@ -73,7 +73,7 @@ object BalloonGame {
   }
 
   def runStates(userInput: UserActionResult => Task[UserInput], nextBalloon: UserActionResult => Option[BalloonThreshold]): LazyList[GameState] = {
-    LazyList.unfold(GameState(BalloonState(0, 0, 0), InitialState, 0, 0)) { inputState =>
+    LazyList.unfold(GameState(BalloonState(0, 0, 0, false), InitialState, 0, 0, 1)) { inputState =>
       inputState.advance(userInput, nextBalloon).map { nextState =>
         (nextState, nextState)
       }

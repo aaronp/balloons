@@ -25,7 +25,27 @@ import org.scalatest.wordspec.AnyWordSpec
  */
 class MainTest extends AnyWordSpec with Matchers {
 
-  "Main.run for fixed input" should {
+  "Main.run" should {
+    "only allow power mode once in a game" in {
+      val settings = RandomGameSettings(minSize = 2, maxSize = 4, minBalloons = 1, maxBalloons = 5)
+      val userInputs =
+        """2 4 1
+          >POWER_MODE
+          >INFLATE
+          >INFLATE
+          >BANK
+          >INFLATE
+          >BANK
+          >POWER_MODE
+          >INFLATE
+          >BANK""".stripMargin('>')
+      val expectedPrompts =
+        """POWER_MODE ALREADY USED""".stripMargin('>')
+      val expectedOutput =
+        """SCORE: 6""".stripMargin('>')
+      verify(settings, userInputs, expectedPrompts, expectedOutput)
+    }
+
     "generate the expected output for game input '2 4 1'" in {
       val settings = RandomGameSettings(minSize = 2, maxSize = 4, minBalloons = 1, maxBalloons = 5)
       val userInputs =
@@ -92,14 +112,14 @@ class MainTest extends AnyWordSpec with Matchers {
       val expectedPrompts =
         """#1: size is 0
           >#1 : size is 1
-          >Invalid input 'invalid', expected 'INFLATE' or 'BANK'
+          >Invalid input 'invalid', expected 'INFLATE', 'BANK' or 'POWER_MODE'
           >#1 : size is 2""".stripMargin('>')
       val expectedOutput =
         """
           >____________________________________
           >SCORE: 2, 0 burst out of 1 balloons:
           >____________________________________
-          >Balloon 1 : Scored 2 / 2""".stripMargin('>')
+          >Balloon 1 : Scored 2: 2 / 2""".stripMargin('>')
       verify(settings, userInputs, expectedPrompts, expectedOutput)
     }
 
@@ -143,12 +163,104 @@ class MainTest extends AnyWordSpec with Matchers {
           >____________________________________
           >SCORE: 6, 0 burst out of 6 balloons:
           >____________________________________
-          >Balloon 1 : Scored 0 / 3
-          >Balloon 2 : Scored 0 / 20
-          >Balloon 3 : Scored 1 / 17
-          >Balloon 4 : Scored 1 / 16
-          >Balloon 5 : Scored 1 / 15
-          >Balloon 6 : Scored 3 / 12""".stripMargin('>')
+          >Balloon 1 : Scored 0: 0 / 3
+          >Balloon 2 : Scored 0: 0 / 20
+          >Balloon 3 : Scored 1: 1 / 17
+          >Balloon 4 : Scored 1: 1 / 16
+          >Balloon 5 : Scored 1: 1 / 15
+          >Balloon 6 : Scored 3: 3 / 12""".stripMargin('>')
+      verify(settings, userInputs, expectedPrompts, expectedOutput)
+    }
+
+    "double the score when power mode is enabled for game 'r2'" in {
+      val settings = RandomGameSettings(minSize = 1, maxSize = 20, minBalloons = 2, maxBalloons = 10)
+      val userInputs =
+        """r2
+          >INFLATE
+          >INFLATE
+          >POWER_MODE
+          >POWER_MODE
+          >INFLATE
+          >BANK
+          >POWER_MODE
+          >INFLATE
+          >POWER_MODE
+          >INFLATE
+          >BANK
+          >BANK
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >POWER_MODE
+          >INVALID USER INPUT
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >MORE invalid input
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE
+          >INFLATE""".stripMargin('>')
+      val expectedPrompts =
+        """#1: size is 0
+          >#1 : size is 1
+          >#1 : size is 2
+          >Power Mode!
+          >#1 : POWER_MODE ALREADY ENABLED
+          >#1 : size is 3*
+          >#1 BANKED 3!
+          >#2 size is 0
+          >#2 : POWER_MODE ALREADY USED
+          >#2 : size is 1
+          >#2 : POWER_MODE ALREADY USED
+          >#2 : size is 2
+          >#2 BANKED 2!
+          >#3 size is 0
+          >#3 BANKED 0!
+          >#4 size is 0
+          >#4 : size is 1
+          >#4 : size is 2
+          >#4 : size is 3
+          >#4 : size is 4
+          >#4 : size is 5
+          >#4 : size is 6
+          >#4 : size is 7
+          >#4 : size is 8
+          >#4 : size is 9
+          >#4 : size is 10
+          >#4 : size is 11
+          >#4 : size is 12
+          >#4 : POWER_MODE ALREADY USED
+          >Invalid input 'INVALID USER INPUT', expected 'INFLATE', 'BANK' or 'POWER_MODE'
+          >#4 : size is 13
+          >#4 : size is 14
+          >#4 : size is 15
+          >#4 : size is 16
+          >Invalid input 'MORE invalid input', expected 'INFLATE', 'BANK' or 'POWER_MODE'
+          >#4 : size is 17
+          >#4 : size is 18
+          >#4 : size is 19
+          >#4 : size is 20""".stripMargin('>')
+      val expectedOutput =
+        """
+          >____________________________________
+          >SCORE: 8, 1 burst out of 4 balloons:
+          >____________________________________
+          >Balloon 1 : Scored 6: 3 / 19 --> power mode!
+          >Balloon 2 : Scored 2: 2 / 10
+          >Balloon 3 : Scored 0: 0 / 5
+          >Balloon 4 : Popped at size 20""".stripMargin('>')
       verify(settings, userInputs, expectedPrompts, expectedOutput)
     }
   }
@@ -172,13 +284,15 @@ class MainTest extends AnyWordSpec with Matchers {
 
     val actualPrompts = trimBlankLines(recorder.prompts.flatMap(_.linesIterator))
 
-    withClue(s"User Prompts: Expected:\n${expectedPrompts.linesIterator.zipWithIndex.mkString("\n")}\nbut got:\n${actualPrompts.zipWithIndex.mkString("\n")}") {
-      // drop the initial prompt for the game settings
-
-      expectedPrompts.linesIterator.size shouldBe actualPrompts.size
-      expectedPrompts.linesIterator.zip(actualPrompts).foreach {
-        case (actualLine, expected) => actualLine shouldBe expected
+    val expOpts: Iterator[Option[String]] = expectedPrompts.linesIterator.map(Option.apply)
+    val actOpts = actualPrompts.map(Option.apply)
+    actOpts.zipAll(expOpts.toSeq, None, None).zipWithIndex.foreach {
+      case ((Some(e), Some(a)), _) if e == a => s"$e --> OK!"
+      case ((Some(actual), Some(expected)), i) => withClue(s"Prompt $i") {
+        actual shouldBe expected
       }
+      case ((Some(actual), None), i) => fail(s"No more prompts expected at $i, but got: '$actual'")
+      case ((None, Some(expected)), i) => fail(s"prompt $i '$expected' is missing")
     }
 
     trimBlank(actualResult) shouldBe trimBlank(expectedOutput)

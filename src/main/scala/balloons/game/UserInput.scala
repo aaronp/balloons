@@ -14,6 +14,8 @@ object UserInput {
 
   case object Bank extends UserInput
 
+  case object PowerMode extends UserInput
+
   def interpretter(verbose: Boolean, promptUser: Prompt => Task[String]): UserActionResult => Task[UserInput] = {
     if (verbose) {
       UserInput.verboseInput(_, promptUser)
@@ -43,7 +45,8 @@ object UserInput {
 
   def quietInput(previousResult: UserActionResult, readNext: Prompt => Task[String]): Task[UserInput] = {
     val prompt = previousResult match {
-      case Burst(i, s) => "BURST"
+      case Burst(_, _) => "BURST\n"
+      case InvalidUserInput(_, err) => s"$err\n"
       case _ => ""
     }
     Task.eval(promptUser(prompt, readNext))
@@ -51,7 +54,10 @@ object UserInput {
 
   def verboseInput(previousResult: UserActionResult, readNext: Prompt => Task[String]): Task[UserInput] = {
     val prompt = previousResult match {
-      case Ok(BalloonState(i, s, t)) => s"#$i : size is $s"
+      case Ok(BalloonState(i, s, _, true)) => s"#$i : size is $s*"
+      case Ok(BalloonState(i, s, _, false)) => s"#$i : size is $s"
+      case InvalidUserInput(i, err) => s"#$i : $err\n"
+      case PowerModeEntered(_) => s"Power Mode!\n"
       case Banked(i, s) => s"#$i BANKED $s!\n#${previousResult.balloonIndex + 1} size is 0"
       case Burst(i, s) => s"#$i : $s POPPED!\n#${previousResult.balloonIndex + 1} size is 0"
       case InitialState => "#1: size is 0"
@@ -68,8 +74,9 @@ object UserInput {
     readLine(prompt).run() match {
       case "INFLATE" | "" => UserInput.Inflate
       case "BANK" | "b" => UserInput.Bank
+      case "POWER_MODE" | "p" => UserInput.PowerMode
       case other =>
-        promptUser(s"Invalid input '$other', expected 'INFLATE' or 'BANK'", readLine)
+        promptUser(s"Invalid input '$other', expected 'INFLATE', 'BANK' or 'POWER_MODE'", readLine)
     }
   }
 }
